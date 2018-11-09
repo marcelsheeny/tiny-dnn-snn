@@ -44,4 +44,5 @@ if(DOWNLOAD_SYCLDNN)
 endif()
 
 include_directories(${CMAKE_BINARY_DIR}/SYCLDNN-src/include)
+add_subdirectory(${CMAKE_BINARY_DIR}/SYCLDNN-src)
 

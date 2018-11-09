@@ -1,0 +1,41 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1f5e9d1..3d5aa15 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -81,8 +81,8 @@ if(SNN_CONV2D_DIRECT_STATIC_KERNELS)
+   add_definitions(-DSNN_CONV2D_STATIC_DIRECT=1)
+ endif()
+ 
+-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
++list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
++list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
+ if(NOT SNN_FASTBUILD)
+   include(DefaultBuildType)
+ endif()
+diff --git a/cmake/HandleEigen.cmake b/cmake/HandleEigen.cmake
+index 433726f..1374a78 100644
+--- a/cmake/HandleEigen.cmake
++++ b/cmake/HandleEigen.cmake
+@@ -25,7 +25,7 @@ if(NOT Eigen_FOUND AND (SNN_DOWNLOAD_EIGEN OR SNN_DOWNLOAD_MISSING_DEPS))
+   set(EIGEN_HG_TAG "da8c182" CACHE STRING
+     "Hg tag, branch or commit to use for the Eigen library"
+   )
+-  configure_file(${CMAKE_SOURCE_DIR}/cmake/EigenDownload.cmake.in
++  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/EigenDownload.cmake.in
+     ${sycldnn_BINARY_DIR}/eigen-download/CMakeLists.txt)
+ 
+   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+diff --git a/cmake/Modules/FindEigen.cmake b/cmake/Modules/FindEigen.cmake
+index 73dc0b0..070b4cf 100644
+--- a/cmake/Modules/FindEigen.cmake
++++ b/cmake/Modules/FindEigen.cmake
+@@ -26,7 +26,7 @@
+ find_path(EIGEN_INCLUDE_DIR
+   NAMES unsupported/Eigen/CXX11/Tensor
+   PATH_SUFFIXES eigen3 Eigen3
+-  HINTS ${CMAKE_BINARY_DIR}/eigen-src
++  HINTS ${CMAKE_CURRENT_BINARY_DIR}/eigen-src
+   DOC "The Eigen SYCL Tensor module"
+ )
+ include(FindPackageHandleStandardArgs)
