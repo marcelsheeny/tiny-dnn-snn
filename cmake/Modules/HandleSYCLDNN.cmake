@@ -23,8 +23,6 @@ if(DOWNLOAD_SYCLDNN)
     "git tag, branch or commit to use for the SYCL-DNN library"
   )
 
-  message("ASDASDASDASD")
-  message("${CMAKE_BINARY_DIR}")
   configure_file(${CMAKE_SOURCE_DIR}/cmake/Modules/DownloadSYCLDNN.cmake.in
     ${CMAKE_BINARY_DIR}/sycldnn-download/CMakeLists.txt)
 
