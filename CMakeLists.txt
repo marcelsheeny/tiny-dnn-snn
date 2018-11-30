@@ -126,14 +126,21 @@ if(USE_GEMMLOWP)
 endif()
 
 if(USE_SYCLDNN)
-    add_definitions(-DUSE_SYCLDNN)
-    LINK_DIRECTORIES(/home/marcel/Projects/SYCL-DNN/build/)
+    include(FindComputeCpp)
+    find_package(sycldnn)
+    add_definitions(-DUSE_SYCLDNN
+                    -DDISABLE_SKINNY=1
+                    -DDISABLE_RANK1=1
+                    -DDISABLE_GEMV=1
+                    -DDISABLE_SCALAR=1
+                    -DEIGEN_HAS_CXX11_MATH=1
+                    -DEIGEN_USE_SYCL)
+
     include_directories(${EIGEN_PATH})
     include_directories(${SYCLDNN_INCLUDE_DIR})
     #set(DOWNLOAD_SYCLDNN ON)
-    include(FindComputeCpp)
     #include(FindEigen)
-    include(SNNHelpers)
+#    include(SNNHelpers)
     #include(HandleSYCLDNN)
     #execute_process(COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/sycldnn.patch)
 endif()
