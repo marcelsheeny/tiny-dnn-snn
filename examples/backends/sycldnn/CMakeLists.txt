@@ -25,14 +25,16 @@
 #     Eigen::Eigen
 # )
 
-set(SOURCE_NAME "test_sycldnn")
+function(sycldnn_build SOURCE_NAME)
+
+
 
 add_executable(
   ${SOURCE_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_NAME}.cpp
 )
 
-target_link_libraries(${SOURCE_NAME} SYCLDNN::sycl_dnn)
+target_link_libraries(${SOURCE_NAME} SYCLDNN::sycl_dnn  ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
 add_sycl_to_target(
   TARGET ${SOURCE_NAME}
@@ -43,3 +45,8 @@ install(
   TARGETS ${SOURCE_NAME}
   RUNTIME DESTINATION bin
 )
+
+endfunction()
+
+sycldnn_build("test_sycldnn")
+sycldnn_build("mnist_test_sycldnn")

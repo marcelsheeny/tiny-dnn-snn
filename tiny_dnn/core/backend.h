@@ -27,7 +27,16 @@ namespace core {
 // TODO(edgar): remove this
 class context;
 
-enum class backend_t { internal, nnpack, libdnn, avx, opencl, cblas, intel_mkl };
+enum class backend_t {
+  internal,
+  nnpack,
+  libdnn,
+  avx,
+  opencl,
+  cblas,
+  intel_mkl,
+  sycl_dnn
+};
 
 inline std::ostream &operator<<(std::ostream &os, backend_t type) {
   switch (type) {
@@ -38,6 +47,7 @@ inline std::ostream &operator<<(std::ostream &os, backend_t type) {
     case backend_t::opencl: os << "OpenCL"; break;
     case backend_t::cblas: os << "CBLAS"; break;
     case backend_t::intel_mkl: os << "Intel MKL"; break;
+    case backend_t::sycl_dnn: os << "SYCL-DNN"; break;
     default: throw nn_error("Not supported ostream enum."); break;
   }
   return os;

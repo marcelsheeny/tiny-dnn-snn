@@ -12,6 +12,7 @@
 #include "tiny_dnn/core/kernels/conv2d_op_avx.h"
 #include "tiny_dnn/core/kernels/conv2d_op_internal.h"
 #include "tiny_dnn/core/kernels/conv2d_op_nnpack.h"
+#include "tiny_dnn/core/kernels/conv2d_op_sycldnn.h"
 
 namespace tiny_dnn {
 
@@ -45,6 +46,9 @@ class Conv2dOp : public core::OpKernel {
     } else if (engine == core::backend_t::avx) {
       kernels::conv2d_op_avx(in_data, W[0], bias[0], out_data, params,
                              context.parallelize());
+    } else if (engine == core::backend_t::sycl_dnn) {
+      kernels::conv2d_op_sycldnn(in_data, W[0], bias[0], out_data, params,
+                                 context.parallelize());
     } else {
       throw nn_error("Not supported engine: " + to_string(engine));
     }
