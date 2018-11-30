@@ -40,6 +40,14 @@ if(USE_SERIALIZER)
     target_link_libraries(example_ssd_test
             ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
+
+    if (${USE_OPENCV})
+        find_package( OpenCV REQUIRED )
+        add_executable(example_ssd_webcam ssd_detection/ssd_webcam.cpp ${tiny_dnn_headers})
+        target_link_libraries(example_ssd_webcam
+                ${project_library_target_name} ${REQUIRED_LIBRARIES} ${OpenCV_LIBS})
+    endif()
+
     cotire(example_mnist_train example_mnist_test example_mnist_quantized_train example_deconv_train example_ssd_test)
 endif()
 
