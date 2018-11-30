@@ -42,7 +42,7 @@ def dump_layer_weights(f, weight, bias):
 
 
 def dump_net_weights(model_path, output_folder):
-    ckpt = torch.load(model_path)
+    ckpt = torch.load(model_path, map_location='cpu')
 
     for net_id in nets:
         layers = nets[net_id]

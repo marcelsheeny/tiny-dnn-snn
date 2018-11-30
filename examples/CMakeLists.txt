@@ -40,7 +40,12 @@ if(USE_SERIALIZER)
     target_link_libraries(example_ssd_test
             ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
-    cotire(example_mnist_train example_mnist_test example_mnist_quantized_train example_deconv_train example_ssd_test)
+    find_package( OpenCV REQUIRED )
+    add_executable(example_ssd_webcam ssd_detection/ssd_webcam.cpp ${tiny_dnn_headers})
+    target_link_libraries(example_ssd_webcam
+            ${project_library_target_name} ${REQUIRED_LIBRARIES} ${OpenCV_LIBS} )
+
+    cotire(example_mnist_train example_mnist_test example_mnist_quantized_train example_deconv_train example_ssd_test example_ssd_webcam)
 endif()
 
 add_executable(example_deconv_visual deconv/visual.cpp ${tiny_dnn_headers})
@@ -71,7 +76,6 @@ add_executable(example_sinus_fit sinus_fit/sinus_fit.cpp ${tiny_dnn_headers})
 target_link_libraries(example_sinus_fit
         ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
-add_subdirectory(backends/sycldnn)
 
 cotire(example_deconv_visual example_cifar_train example_cifar_test example_recurrent_addition example_train_char_rnn example_test_char_rnn example_sinus_fit)
 
@@ -88,6 +92,10 @@ endif()
 
 if(PROTO_CPP_GENERATE)
     add_dependencies(example_caffe_converter generated_proto)
+endif()
+
+if(USE_SYCLDNN)
+    add_subdirectory(backends/sycldnn)
 endif()
 
 if(USE_CBLAS)
