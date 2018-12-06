@@ -168,7 +168,10 @@ TEST(convolutional, with_stride) {
   }
 
   float_t curr_delta[] = {
-    -1.0f, 2.0f, 3.0f, 0.0f,
+    -1.0f,
+    2.0f,
+    3.0f,
+    0.0f,
   };
 
   float_t expected_prev_delta[] = {-0.5f, -0.5f, 0.5f, 1.0f, 1.0f, -0.5f, -0.5f,
@@ -250,6 +253,101 @@ TEST(convolutional, with_dilation) {
     EXPECT_NEAR(float_t(4296.0), out[8], 1E-5);
   }
 }
+
+// test for SYCL-DNN
+#ifdef USE_SYCLDNN
+// #define TEST_CONVOLUTIONAL_FPROP(BACKEND)                    \
+//   TEST(convolutional, fprop_##BACKEND) {                     \
+//     convolutional_layer l(7, 7, 5, 1, 2);                    \
+//     tensor_buf buf(l), buf2(l);                              \
+//     l.set_backend_type(tiny_dnn::core::backend_t::internal); \
+//     l.forward_propagation(buf.in_buf(), buf.out_buf());      \
+//     l.set_backend_type(tiny_dnn::core::backend_t::BACKEND);  \
+//     l.forward_propagation(buf.in_buf(), buf2.out_buf());     \
+//     vec_t &out          = buf2.out_at(0)[0];                 \
+//     vec_t &out_internal = buf.out_at(0)[0];                  \
+//     for (size_t i = 0; i < out.size(); i++) {                \
+//       EXPECT_NEAR(out[i], out_internal[i], 1E-5);            \
+//     }                                                        \
+//   }
+
+// TEST(convolutional, fprop_values_sycl_dnn) {
+//   convolutional_layer l(5, 5, 3, 3, 2, padding::same, true, 2, 2, 2, 2,
+//                         tiny_dnn::core::backend_t::sycl_dnn);
+//   tensor_t in0 = {
+//     {1, 1, 0, 2, 2, 0, 2, 1, 0, 0, 2, 1, 0, 1, 0, 1, 2, 1, 2, 1, 1, 0, 0, 0,
+//     1}, {1, 2, 1, 2, 1, 0, 0, 2, 2, 0, 2, 1, 0, 2, 1, 1, 1, 2, 2, 1, 0, 2, 0,
+//     2, 1}, {1, 0, 2, 1, 1, 0, 0, 2, 1, 2, 2, 0, 1,
+//      2, 2, 2, 2, 2, 0, 2, 1, 2, 0, 0, 0}};
+//   tensor_t out0 = {{0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0}};
+//   tensor_t out_expected = {{6, 0, 2, 4, -4, -1, 1, 0, 0},
+//                            {-1, 5, 1, 4, 0, 4, -5, -3, -5}};
+//   std::vector<tensor_t *> in;
+//   in.push_back(&in0);
+//   std::vector<tensor_t *> out;
+//   out.push_back(&out0);
+//   l.forward_propagation(in, out);
+
+//   // for (size_t i = 0; i < out_expected.size(); i++) {
+//   //   EXPECT_NEAR(out[i], out_expected[i], 1E-5);
+//   // }
+// }
+
+TEST(convolutional, fprop_values_sycl_dnn) {
+  convolutional_layer l(5, 5, 3, 1, 2, padding::valid, true, 1, 1, 1, 1,
+                        tiny_dnn::core::backend_t::sycl_dnn);
+
+  tensor_buf buf(l, false);
+
+  // short-hand references to the payload vectors
+  vec_t &in = buf.in_at(0)[0], &out = buf.out_at(0)[0],
+        &weight = buf.in_at(1)[0];
+
+  ASSERT_EQ(l.in_shape()[1].size(), size_t(18));  // weight
+
+  uniform_rand(in.begin(), in.end(), -1.0, 1.0);
+
+  l.setup(false);
+  {
+    l.forward_propagation(buf.in_buf(), buf.out_buf());
+
+    for (auto o : out) EXPECT_DOUBLE_EQ(o, tiny_dnn::float_t(0.0));
+  }
+
+  // clang-format off
+  weight[0] = 0.3f;  weight[1] = 0.1f;   weight[2] = 0.2f;
+  weight[3] = 0.0f;  weight[4] = -0.1f;  weight[5] = -0.1f;
+  weight[6] = 0.05f; weight[7] = -0.2f;  weight[8] = 0.05f;
+
+  weight[9]  = 0.0f; weight[10] = -0.1f; weight[11] = 0.1f;
+  weight[12] = 0.1f; weight[13] = -0.2f; weight[14] = 0.3f;
+  weight[15] = 0.2f; weight[16] = -0.3f; weight[17] = 0.2f;
+
+  in[0]  = 3; in[1]  = 2;  in[2]  = 1; in[3]  = 5; in[4]  = 2;
+  in[5]  = 3; in[6]  = 0;  in[7]  = 2; in[8]  = 0; in[9]  = 1;
+  in[10] = 0; in[11] = 6;  in[12] = 1; in[13] = 1; in[14] = 10;
+  in[15] = 3; in[16] = -1; in[17] = 2; in[18] = 9; in[19] = 0;
+  in[20] = 1; in[21] = 2;  in[22] = 1; in[23] = 5; in[24] = 5;
+  // clang-format on
+
+  {
+    l.forward_propagation(buf.in_buf(), buf.out_buf());
+
+    EXPECT_NEAR(float_t(-0.05), out[0], 1E-5);
+    EXPECT_NEAR(float_t(1.65), out[1], 1E-5);
+    EXPECT_NEAR(float_t(1.45), out[2], 1E-5);
+    EXPECT_NEAR(float_t(1.05), out[3], 1E-5);
+    EXPECT_NEAR(float_t(0.00), out[4], 1E-5);
+    EXPECT_NEAR(float_t(-2.0), out[5], 1E-5);
+    EXPECT_NEAR(float_t(0.40), out[6], 1E-5);
+    EXPECT_NEAR(float_t(1.15), out[7], 1E-5);
+    EXPECT_NEAR(float_t(0.80), out[8], 1E-5);
+  }
+}
+
+// TEST_CONVOLUTIONAL_FPROP(sycl_dnn)
+
+#endif
 
 // test for AVX backends
 

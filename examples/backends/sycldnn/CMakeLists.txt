@@ -34,6 +34,10 @@ add_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_NAME}.cpp
 )
 
+  target_include_directories(${SOURCE_NAME} PUBLIC ${COMPUTECPP_INCLUDE_DIRECTORY})
+  target_include_directories(${SOURCE_NAME} PUBLIC ${SYCLDNN_INCLUDE_DIR})
+  target_include_directories(${SOURCE_NAME} PUBLIC ${EIGEN_PATH})
+
 target_link_libraries(${SOURCE_NAME} SYCLDNN::sycl_dnn  ${project_library_target_name} ${REQUIRED_LIBRARIES})
 
 add_sycl_to_target(

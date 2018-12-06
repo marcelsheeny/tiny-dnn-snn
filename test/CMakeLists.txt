@@ -9,8 +9,26 @@ add_executable(tiny_dnn_test test.cpp test_main.cpp)
 
 set_target_properties(tiny_dnn_test PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(tiny_dnn_test
-    ${project_library_target_name} ${REQUIRED_LIBRARIES})
+if (USE_SYCLDNN)
+
+#    set_property(
+#      TARGET tiny_dnn_test
+#      PROPERTY COMPUTECPP_INCLUDE_AFTER 1
+#    )
+
+  target_include_directories(tiny_dnn_test PUBLIC ${COMPUTECPP_INCLUDE_DIRECTORY})
+  target_include_directories(tiny_dnn_test PUBLIC ${SYCLDNN_INCLUDE_DIR})
+  target_include_directories(tiny_dnn_test PUBLIC ${EIGEN_PATH})
+
+  target_link_libraries(tiny_dnn_test
+  PUBLIC SYCLDNN::sycl_dnn ${project_library_target_name} ${REQUIRED_LIBRARIES})
+
+  add_sycl_to_target(TARGET tiny_dnn_test
+                     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/test.cpp")
+else()
+    target_link_libraries(tiny_dnn_test
+        ${project_library_target_name} ${REQUIRED_LIBRARIES})
+endif()
 
 
 add_test(all_tests tiny_dnn_test)
@@ -33,7 +51,7 @@ if(PROTO_CPP_AVAILABLE)
     target_sources(tiny_dnn_test PUBLIC ${proto_file})
     set_source_files_properties(test.cpp PROPERTIES COMPILE_DEFINITIONS
                                 CNN_USE_CAFFE_CONVERTER)
-    target_link_libraries(tiny_dnn_test
+    target_link_libraries(tiny_dnn_test PUBLIC
             ${project_library_target_name}
             ${PROTOBUF_LIBRARIES} ${REQUIRED_LIBRARIES})   
 endif()

@@ -136,13 +136,10 @@ if(USE_SYCLDNN)
                     -DEIGEN_HAS_CXX11_MATH=1
                     -DEIGEN_USE_SYCL)
 
-    include_directories(${EIGEN_PATH})
-    include_directories(${SYCLDNN_INCLUDE_DIR})
-    #set(DOWNLOAD_SYCLDNN ON)
-    #include(FindEigen)
-#    include(SNNHelpers)
-    #include(HandleSYCLDNN)
-    #execute_process(COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/sycldnn.patch)
+    #include_directories(SYSTEM ${COMPUTECPP_INCLUDE_DIRECTORY})
+    #include_directories(${EIGEN_PATH})
+    #include_directories(${SYCLDNN_INCLUDE_DIR})
+
 endif()
 
 # Find Open Multi-Processing (OpenMP)

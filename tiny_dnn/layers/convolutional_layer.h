@@ -511,7 +511,8 @@ class convolutional_layer : public layer {
 
     if (backend_type == core::backend_t::internal ||
         backend_type == core::backend_t::nnpack ||
-        backend_type == core::backend_t::avx) {
+        backend_type == core::backend_t::avx ||
+        backend_type == core::backend_t::sycl_dnn) {
       kernel_fwd_.reset(new Conv2dOp(ctx));
       kernel_back_.reset(new Conv2dGradOp(ctx));
       return;

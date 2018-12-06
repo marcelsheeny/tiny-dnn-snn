@@ -23,6 +23,60 @@
 namespace tiny_dnn {
 namespace kernels {
 
+// void changeDataLayout(const vec_t &input,
+//                       vec_t &output,
+//                       const int &N,
+//                       const int &C,
+//                       const int &W,
+//                       const int &H) {
+//   for (int n = 0; n < N; n++) {
+//     for (int c = 0; c < C; c++) {
+//       for (int w = 0; w < W; w++) {
+//         for (int h = 0; h < H; h++) {
+//           input[n * N + c * C + w * W + h] = output[n * N + c * C + w * W +
+//           h];
+//         }
+//       }
+//     }
+//   }
+
+void add_bias(const vec_t &bias,
+              const int &width,
+              const int &height,
+              tensor_t &tensor) {
+  // for each data of the bacth
+  for (int b = 0; b < tensor.size(); b++) {
+    // for each bias point
+    for (int i = 0; i < bias.size(); i++) {
+      // for each data point
+      for (int j = 0; j < height; j++) {
+        for (int k = 0; k < width; k++) {
+          int tensor_index = i * bias.size() + j * height + k;
+          tensor[b][tensor_index] += bias[i];
+        }
+      }
+    }
+  }
+}
+
+void vector2d_to_vector1d(const tensor_t &vec2d, vec_t &vec1d) {
+  for (int i = 0; i < vec2d.size(); ++i) {
+    const vec_t &v = vec2d[i];
+    vec1d.insert(vec1d.end(), v.begin(), v.end());
+  }
+}
+
+void vector1d_to_vector2d(const vec_t &vec1d, tensor_t &vec2d) {
+  const int batch = vec1d.size() / vec2d.size();
+  for (int i = 0; i < vec2d.size(); ++i) {
+    int init_index              = i * batch;
+    vec_t::const_iterator first = vec1d.begin() + init_index;
+    vec_t::const_iterator last  = vec1d.begin() + init_index + batch;
+    vec_t subvec(first, last);
+    vec2d[i] = subvec;
+  }
+}
+
 inline void conv2d_op_sycldnn(const tensor_t &in_data,
                               const vec_t &W,
                               const vec_t &bias,
@@ -45,8 +99,8 @@ inline void conv2d_op_sycldnn(const tensor_t &in_data,
   conv_params.channels      = params.in.depth_;
   conv_params.features      = params.out.depth_;
   conv_params.batch         = in_data.size();
-  conv_params.in_rows       = params.in.height_;
-  conv_params.in_cols       = params.in.width_;
+  conv_params.in_rows       = params.in_padded.height_;
+  conv_params.in_cols       = params.in_padded.width_;
   conv_params.window_rows   = params.weight.height_;
   conv_params.window_cols   = params.weight.width_;
   conv_params.stride_rows   = params.h_stride;
@@ -77,8 +131,7 @@ inline void conv2d_op_sycldnn(const tensor_t &in_data,
     static_cast<value_type *>(device.allocate(filter_nbytes));
 
   // populate input buffer
-  std::vector<value_type> input;
-  // input.resize(conv_sizes.input_size);
+  vec_t input;
   for (auto &&v : in_data) {
     input.insert(input.end(), v.begin(), v.end());
   }
@@ -87,21 +140,19 @@ inline void conv2d_op_sycldnn(const tensor_t &in_data,
   device.memcpyHostToDevice(input_gpu_buffer, input.data(), input_nbytes);
   device.memcpyHostToDevice(filter_gpu_buffer, W.data(), filter_nbytes);
 
-  // Now that all of our buffers are populated, and parameters configured, we
-  // can execute the convolution itself. This happens asynchronously, so we
-  // follow the launch of the convolution kernel with a blocking wait.
+  // Now that all of our buffers are populated, and parameters configured,
+  // we can execute the convolution itself. This happens asynchronously, so
+  // we follow the launch of the convolution kernel with a blocking wait.
   auto direct_algo_selector = sycldnn::conv2d::DirectSelector{};
+
   auto status =
     sycldnn::conv2d::launch<value_type, sycldnn::conv2d::conv_type::Forward>(
       input_gpu_buffer, filter_gpu_buffer, output_gpu_buffer, conv_params,
       direct_algo_selector, backend);
 
-  // populate output vector
-  std::vector<value_type> output;
+  // resize output vector
+  vec_t output;
   output.resize(conv_sizes.output_size);
-  for (auto &&v : out_data) {
-    output.insert(output.end(), v.begin(), v.end());
-  }
 
   // Wait for completion, then copy results to system memory.
   status.event.wait();
@@ -109,6 +160,11 @@ inline void conv2d_op_sycldnn(const tensor_t &in_data,
 
   // The convolution results are now available in host-accessible system
   // memory.
+  // copy to output tensor
+  vector1d_to_vector2d(output, out_data);
+
+  if (params.has_bias)
+    add_bias(bias, params.out.width_, params.out.height_, out_data);
 
   // We can now deallocate the Eigen GPU buffers.
   device.deallocate(input_gpu_buffer);
