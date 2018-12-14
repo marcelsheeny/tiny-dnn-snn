@@ -14,6 +14,7 @@
 #include "tiny_dnn/core/kernels/fully_connected_op_intel_mkl.h"
 #include "tiny_dnn/core/kernels/fully_connected_op_internal.h"
 #include "tiny_dnn/core/kernels/fully_connected_op_nnpack.h"
+#include "tiny_dnn/core/kernels/fully_connected_op_sycldnn.h"
 
 namespace tiny_dnn {
 
@@ -56,6 +57,11 @@ class FullyConnectedOp : public core::OpKernel {
         params, context.parallelize());
     } else if (engine == core::backend_t::intel_mkl) {
       kernels::fully_connected_op_intel_mkl(
+        in_data, W[0], params.has_bias_ ? (*bias)[0] : vec_t(), out_data,
+        params, context.parallelize());
+
+    } else if (engine == core::backend_t::sycl_dnn) {
+      kernels::fully_connected_op_sycldnn(
         in_data, W[0], params.has_bias_ ? (*bias)[0] : vec_t(), out_data,
         params, context.parallelize());
     } else {

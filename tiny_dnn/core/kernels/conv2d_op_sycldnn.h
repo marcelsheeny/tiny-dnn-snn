@@ -23,28 +23,11 @@
 namespace tiny_dnn {
 namespace kernels {
 
-// void changeDataLayout(const vec_t &input,
-//                       vec_t &output,
-//                       const int &N,
-//                       const int &C,
-//                       const int &W,
-//                       const int &H) {
-//   for (int n = 0; n < N; n++) {
-//     for (int c = 0; c < C; c++) {
-//       for (int w = 0; w < W; w++) {
-//         for (int h = 0; h < H; h++) {
-//           input[n * N + c * C + w * W + h] = output[n * N + c * C + w * W +
-//           h];
-//         }
-//       }
-//     }
-//   }
-
 void add_bias(const vec_t &bias,
               const int &width,
               const int &height,
               tensor_t &tensor) {
-  // for each data of the bacth
+  // for each data of the batch
   for (int b = 0; b < tensor.size(); b++) {
     // for each bias point
     for (int i = 0; i < bias.size(); i++) {

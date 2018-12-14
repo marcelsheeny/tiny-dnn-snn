@@ -256,42 +256,6 @@ TEST(convolutional, with_dilation) {
 
 // test for SYCL-DNN
 #ifdef USE_SYCLDNN
-// #define TEST_CONVOLUTIONAL_FPROP(BACKEND)                    \
-//   TEST(convolutional, fprop_##BACKEND) {                     \
-//     convolutional_layer l(7, 7, 5, 1, 2);                    \
-//     tensor_buf buf(l), buf2(l);                              \
-//     l.set_backend_type(tiny_dnn::core::backend_t::internal); \
-//     l.forward_propagation(buf.in_buf(), buf.out_buf());      \
-//     l.set_backend_type(tiny_dnn::core::backend_t::BACKEND);  \
-//     l.forward_propagation(buf.in_buf(), buf2.out_buf());     \
-//     vec_t &out          = buf2.out_at(0)[0];                 \
-//     vec_t &out_internal = buf.out_at(0)[0];                  \
-//     for (size_t i = 0; i < out.size(); i++) {                \
-//       EXPECT_NEAR(out[i], out_internal[i], 1E-5);            \
-//     }                                                        \
-//   }
-
-// TEST(convolutional, fprop_values_sycl_dnn) {
-//   convolutional_layer l(5, 5, 3, 3, 2, padding::same, true, 2, 2, 2, 2,
-//                         tiny_dnn::core::backend_t::sycl_dnn);
-//   tensor_t in0 = {
-//     {1, 1, 0, 2, 2, 0, 2, 1, 0, 0, 2, 1, 0, 1, 0, 1, 2, 1, 2, 1, 1, 0, 0, 0,
-//     1}, {1, 2, 1, 2, 1, 0, 0, 2, 2, 0, 2, 1, 0, 2, 1, 1, 1, 2, 2, 1, 0, 2, 0,
-//     2, 1}, {1, 0, 2, 1, 1, 0, 0, 2, 1, 2, 2, 0, 1,
-//      2, 2, 2, 2, 2, 0, 2, 1, 2, 0, 0, 0}};
-//   tensor_t out0 = {{0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0}};
-//   tensor_t out_expected = {{6, 0, 2, 4, -4, -1, 1, 0, 0},
-//                            {-1, 5, 1, 4, 0, 4, -5, -3, -5}};
-//   std::vector<tensor_t *> in;
-//   in.push_back(&in0);
-//   std::vector<tensor_t *> out;
-//   out.push_back(&out0);
-//   l.forward_propagation(in, out);
-
-//   // for (size_t i = 0; i < out_expected.size(); i++) {
-//   //   EXPECT_NEAR(out[i], out_expected[i], 1E-5);
-//   // }
-// }
 
 TEST(convolutional, fprop_values_sycl_dnn) {
   convolutional_layer l(5, 5, 3, 1, 2, padding::valid, true, 1, 1, 1, 1,
@@ -344,8 +308,6 @@ TEST(convolutional, fprop_values_sycl_dnn) {
     EXPECT_NEAR(float_t(0.80), out[8], 1E-5);
   }
 }
-
-// TEST_CONVOLUTIONAL_FPROP(sycl_dnn)
 
 #endif
 
